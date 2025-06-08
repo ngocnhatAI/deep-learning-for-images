@@ -23,7 +23,7 @@ from transform import *
 
 IMG_SIZE = 224
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-data_path = r".\data\gender-classification"
+data_path = r"./data/gender-classification"
 
 
 def preprocessing(batch_size, num_workers):
