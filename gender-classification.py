@@ -99,7 +99,7 @@ def train(model, model_name, train_loader, val_loader, epochs, criterion, optimi
             images, labels = images.to(device), labels.to(device)
             optimizer.zero_grad()
 
-            outputs = model(images).squeeze()
+            outputs = model(images).squeeze().long()
             loss = criterion(outputs, labels)
             loss.backward()
             optimizer.step()
@@ -140,7 +140,7 @@ def evaluate(model, testloader, criterion, device):
     with torch.no_grad():
         for images, labels in testloader:
             images, labels = images.to(device), labels.to(device)
-            outputs = model(images).squeeze()
+            outputs = model(images).squeeze().long()
             
             loss = criterion(outputs, labels)
             test_loss += loss.item()
