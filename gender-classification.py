@@ -146,7 +146,7 @@ def evaluate(model, testloader, criterion, device):
             test_loss += loss.item()
             
             prob = torch.sigmoid(outputs)  # Xác suất [0, 1]
-            predicted = (prob > 0.5).float()    
+            predicted = (prob > 0.5).long()    
                         
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
