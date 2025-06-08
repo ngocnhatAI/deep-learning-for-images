@@ -60,7 +60,7 @@ def preprocessing(batch_size, num_workers):
     )
     return train_loader, val_loader
 
-def get_model(model_name, num_classes=2):
+def get_model(model_name, num_classes=1):
     if model_name == 'resnet18':
         model = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
         model.fc = nn.Linear(model.fc.in_features, num_classes)
@@ -145,8 +145,9 @@ def evaluate(model, testloader, criterion, device):
             loss = criterion(outputs, labels)
             test_loss += loss.item()
             
-            _, predicted = torch.max(outputs.data, 1)
-            
+            prob = torch.sigmoid(outputs)  # Xác suất [0, 1]
+            predicted = (prob > 0.5).float()    
+                        
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
 
@@ -159,11 +160,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Cài đặt siêu tham số cho phân loại giới tính")
     
     # Tham số mô hình và huấn luyện
-    parser.add_argument("--model", type=str, default="resnet18", help="Tên mô hình: resnet18, resnet34, resnet50, vgg16, mobilenet, vit")
-    parser.add_argument("--batch_size", type=int, default=32, help="Kích thước batch")
-    parser.add_argument("--num_workers", type=int, default=0, help="Số lượng worker cho DataLoader")
-    parser.add_argument("--lr", type=float, default=1e-4, help="Tốc độ học")
-    parser.add_argument("--epochs", type=int, default=10, help="Số epoch huấn luyện")
+    parser.add_argument("--model", type=str, default="resnet18", help="Selected model name: resnet18, resnet34, resnet50, vgg16, mobilenet, vit")
+    parser.add_argument("--batch_size", type=int, default=32)
+    parser.add_argument("--num_workers", type=int, default=0)
+    parser.add_argument("--lr", type=float, default=1e-4)
+    parser.add_argument("--epochs", type=int, default=10)
+    
     
     args = parser.parse_args()
     
@@ -172,6 +174,6 @@ if __name__ == "__main__":
     model = get_model(model_name=args.model)
     model.to(device)
     
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.BCEWithLogitsLoss()  
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
     train(model, args.model, train_loader, val_loader, args.epochs, criterion, optimizer)
