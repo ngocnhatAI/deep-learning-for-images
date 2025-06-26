@@ -1,5 +1,7 @@
 import os
 import warnings
+import cv2
+import numpy as np
 from PIL import Image
 from torch.utils.data import Dataset
 warnings.filterwarnings('ignore')
@@ -47,3 +49,32 @@ class GenderDataset(Dataset):
             return image, self.ids[idx]  # Return image and ID for test
         else:
             return image, self.labels[idx]  # Return image and label for train/val
+        
+class MedSegDataset(Dataset):
+    def __init__(self, img_paths, mask_paths, transform=None):
+        self.img_paths = img_paths
+        self.mask_paths = mask_paths
+        self.transform = transform
+    
+    def __len__(self):
+        return len(self.img_paths)
+    
+    def __getitem__(self, index):
+        img_path = self.img_paths[index]
+        
+        image = cv2.imread(img_path)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+        mask = cv2.imread(self.mask_paths[index], cv2.IMREAD_GRAYSCALE)
+        mask = (mask > 0).astype(np.float32) # binary mask
+        
+        if self.transform:
+            aug = self.transform(image=image, mask=mask)
+            image, mask = aug['image'], aug['mask']
+            mask = np.expand_dims(mask, axis=0).astype(np.float32)
+
+        return {
+            "image": image,
+            "mask": mask,
+            "path": img_path
+        }
